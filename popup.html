@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Instagram Comment AI</title>
+        <style>
+            body {
+                width: 350px;
+                padding: 20px;
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                    Oxygen, Ubuntu, Cantarell, sans-serif;
+                margin: 0;
+            }
+
+            h1 {
+                font-size: 18px;
+                margin: 0 0 15px 0;
+                color: #262626;
+            }
+
+            .section {
+                margin-bottom: 20px;
+            }
+
+            label {
+                display: block;
+                margin-bottom: 5px;
+                font-size: 14px;
+                font-weight: 500;
+                color: #262626;
+            }
+
+            input[type="password"],
+            input[type="text"],
+            select,
+            textarea {
+                width: 100%;
+                padding: 10px;
+                border: 1px solid #dbdbdb;
+                border-radius: 6px;
+                font-size: 14px;
+                box-sizing: border-box;
+                font-family: inherit;
+            }
+
+            input[type="password"]:focus,
+            input[type="text"]:focus,
+            select:focus,
+            textarea:focus {
+                outline: none;
+                border-color: #0095f6;
+            }
+
+            textarea {
+                min-height: 80px;
+                resize: vertical;
+            }
+
+            .collapsible {
+                cursor: pointer;
+                user-select: none;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 10px 0;
+            }
+
+            .collapsible:hover {
+                opacity: 0.8;
+            }
+
+            .collapsible::after {
+                content: "▼";
+                font-size: 10px;
+                transition: transform 0.2s;
+            }
+
+            .collapsible.active::after {
+                transform: rotate(-180deg);
+            }
+
+            .collapsible-content {
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease-out;
+            }
+
+            .collapsible-content.active {
+                max-height: 1000px;
+            }
+
+            button {
+                width: 100%;
+                padding: 10px;
+                background: #0095f6;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: background 0.2s;
+            }
+
+            button:hover {
+                background: #0081d8;
+            }
+
+            button:active {
+                transform: scale(0.98);
+            }
+
+            .status {
+                margin-top: 10px;
+                padding: 10px;
+                border-radius: 6px;
+                font-size: 13px;
+                display: none;
+            }
+
+            .status.success {
+                background: #d4edda;
+                color: #155724;
+                display: block;
+            }
+
+            .status.error {
+                background: #f8d7da;
+                color: #721c24;
+                display: block;
+            }
+
+            .info {
+                background: #f0f2f5;
+                padding: 12px;
+                border-radius: 6px;
+                font-size: 13px;
+                color: #65676b;
+                line-height: 1.5;
+            }
+
+            .info strong {
+                color: #262626;
+            }
+
+            .shortcut {
+                display: inline-block;
+                background: white;
+                padding: 2px 6px;
+                border: 1px solid #dbdbdb;
+                border-radius: 4px;
+                font-family: monospace;
+                font-size: 12px;
+                margin: 0 2px;
+            }
+
+            a {
+                color: #0095f6;
+                text-decoration: none;
+            }
+
+            a:hover {
+                text-decoration: underline;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Instagram Comment AI</h1>
+
+        <div class="section">
+            <label for="apiKey">OpenAI API Key</label>
+            <input type="password" id="apiKey" placeholder="sk-..." />
+        </div>
+
+        <div class="section">
+            <label for="model">Model</label>
+            <select id="model">
+                <option value="gpt-4o-mini">
+                    GPT-4o Mini (recommended, with vision)
+                </option>
+                <option value="gpt-4o">
+                    GPT-4o (more expensive, better quality)
+                </option>
+                <option value="gpt-4-turbo">GPT-4 Turbo (with vision)</option>
+                <option value="gpt-3.5-turbo">
+                    GPT-3.5 Turbo (cheapest, no vision)
+                </option>
+            </select>
+        </div>
+
+        <div class="section">
+            <div class="collapsible" id="advancedToggle">
+                <strong>Advanced Settings</strong>
+            </div>
+            <div class="collapsible-content" id="advancedContent">
+                <div class="section">
+                    <label for="systemPrompt">System Prompt</label>
+                    <textarea
+                        id="systemPrompt"
+                        placeholder="You are a helpful assistant..."
+                    ></textarea>
+                </div>
+
+                <div class="section">
+                    <label for="userPrompt">User Prompt Template</label>
+                    <textarea
+                        id="userPrompt"
+                        placeholder="Generate a comment for this post...
+Use {caption}, {hashtags} for placeholders"
+                    ></textarea>
+                    <div
+                        style="font-size: 12px; color: #65676b; margin-top: 5px"
+                    >
+                        Use {caption} and {hashtags} as placeholders
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <button id="saveBtn">Save Settings</button>
+            <div id="status" class="status"></div>
+        </div>
+
+        <div class="section info">
+            <strong>How to use:</strong><br />
+            1. Focus on an Instagram comment input<br />
+            2. Press <span class="shortcut">Cmd+Ctrl+G</span> (Command + Control
+            + G)<br />
+            3. AI analyzes the image and text to generate a relevant comment<br />
+            <br />
+            Get your API key from
+            <a href="https://platform.openai.com/api-keys" target="_blank"
+                >OpenAI Platform</a
+            >
+        </div>
+
+        <script src="popup.js"></script>
+    </body>
+</html>
