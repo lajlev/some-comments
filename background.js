@@ -1,13 +1,30 @@
+// Listen for changes in storage
+chrome.storage.onChanged.addListener((changes, namespace) => {
+  if (namespace === "local" && "butlerMode" in changes) {
+    const newButlerModeState = changes.butlerMode.newValue;
+    const oldButlerModeState = changes.butlerMode.oldValue;
+
+    if (newButlerModeState !== oldButlerModeState) {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs.length > 0) {
+          const action = newButlerModeState ? "startButler" : "stopButler";
+          chrome.tabs.sendMessage(tabs[0].id, { action });
+        }
+      });
+    }
+  }
+});
+
 // Background service worker for Instagram Comment AI Extension
 
 // Listen for messages from content script (keyboard shortcut)
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request.action === "triggerGeneration") {
-    generateComment(sender.tab.id);
+    generateComment(sender.tab.id, request.commentId);
   }
 });
 
-async function generateComment(tabId) {
+async function generateComment(tabId, commentId) {
   try {
     console.log("[IG Comment AI] generateComment called for tab:", tabId);
 
@@ -69,6 +86,7 @@ async function generateComment(tabId) {
       await chrome.tabs.sendMessage(tab.id, {
         action: "insertComment",
         comment: comment,
+        commentId: commentId,
       });
     }
   } catch (error) {

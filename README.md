@@ -11,6 +11,7 @@ A Chrome extension that uses OpenAI API with vision capabilities to generate rel
 - Works when comment input is focused
 - Configurable OpenAI API key
 - Natural, authentic-sounding comments
+- **Butler Mode:** An automated mode to scroll, like, follow, and comment on posts.
 
 ## Installation
 
@@ -32,6 +33,7 @@ A Chrome extension that uses OpenAI API with vision capabilities to generate rel
 
 ## Usage
 
+### Generating a Comment
 1. Navigate to Instagram (instagram.com)
 2. Find a post and click on the comment input field to focus it
 3. Press the keyboard shortcut: `Command + Control + G` (Cmd + Ctrl + G)
@@ -43,6 +45,13 @@ A Chrome extension that uses OpenAI API with vision capabilities to generate rel
    - Insert it into the comment field
    - Show a green success notification
 5. Review the comment and press Enter to post (or edit as needed)
+
+### Butler Mode
+1.  Click the extension icon to open the popup.
+2.  Expand the "Butler Mode" section.
+3.  Check the "Enable Butler Mode" box.
+4.  The extension will now automatically scroll, like, follow, and comment on posts.
+5.  To disable, uncheck the "Enable Butler Mode" box.
 
 ## Customization
 

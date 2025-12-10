@@ -8,6 +8,15 @@ const saveBtn = document.getElementById("saveBtn");
 const statusDiv = document.getElementById("status");
 const advancedToggle = document.getElementById("advancedToggle");
 const advancedContent = document.getElementById("advancedContent");
+const butlerModeBtn = document.getElementById("butlerModeBtn");
+const butlerStats = document.getElementById("butlerStats");
+const likesCount = document.getElementById("likesCount");
+const followsCount = document.getElementById("followsCount");
+const commentsCount = document.getElementById("commentsCount");
+const butlerSettingsToggle = document.getElementById("butlerSettingsToggle");
+const butlerSettingsContent = document.getElementById("butlerSettingsContent");
+const maxActionsInput = document.getElementById("maxActions");
+const maxCommentsInput = document.getElementById("maxComments");
 
 // Default prompts
 const DEFAULT_SYSTEM_PROMPT =
@@ -31,7 +40,16 @@ Comment:`;
 
 // Load saved settings on popup open
 chrome.storage.local.get(
-  ["openaiApiKey", "model", "systemPrompt", "userPrompt"],
+  [
+    "openaiApiKey",
+    "model",
+    "systemPrompt",
+    "userPrompt",
+    "butlerMode",
+    "butlerStats",
+    "maxActions",
+    "maxComments",
+  ],
   (result) => {
     if (result.openaiApiKey) {
       apiKeyInput.value = result.openaiApiKey;
@@ -40,17 +58,65 @@ chrome.storage.local.get(
     modelSelect.value = result.model || "gpt-4o-mini";
     systemPromptInput.value = result.systemPrompt || DEFAULT_SYSTEM_PROMPT;
     userPromptInput.value = result.userPrompt || DEFAULT_USER_PROMPT;
+    maxActionsInput.value = result.maxActions || 40;
+    maxCommentsInput.value = result.maxComments || 10;
 
-    if (result.openaiApiKey) {
-      showStatus("Settings loaded", "success");
-    }
+    updateButlerButton(result.butlerMode);
+    updateButlerStats(result.butlerStats);
   },
 );
+
+function updateButlerButton(butlerMode) {
+  if (butlerMode) {
+    butlerModeBtn.textContent = "Disable Butler Mode";
+    butlerModeBtn.style.backgroundColor = "#ed4956";
+  } else {
+    butlerModeBtn.textContent = "Enable Butler Mode";
+    butlerModeBtn.style.backgroundColor = "#0095f6";
+  }
+}
+
+function updateButlerStats(stats) {
+  if (stats) {
+    butlerStats.style.display = "block";
+    likesCount.textContent = stats.likes;
+    followsCount.textContent = stats.follows;
+    commentsCount.textContent = stats.comments;
+  } else {
+    butlerStats.style.display = "none";
+  }
+}
+
+butlerModeBtn.addEventListener("click", () => {
+  chrome.storage.local.get(["butlerMode"], (result) => {
+    const newButlerModeState = !result.butlerMode;
+    chrome.storage.local.set({ butlerMode: newButlerModeState }, () => {
+      updateButlerButton(newButlerModeState);
+      if (!newButlerModeState) {
+        chrome.storage.local.get(["butlerStats"], (res) => {
+          updateButlerStats(res.butlerStats);
+        });
+      } else {
+        chrome.storage.local.set(
+          { butlerStats: { likes: 0, follows: 0, comments: 0 } },
+          () => {
+            updateButlerStats({ likes: 0, follows: 0, comments: 0 });
+          },
+        );
+      }
+    });
+  });
+});
 
 // Collapsible advanced settings
 advancedToggle.addEventListener("click", () => {
   advancedToggle.classList.toggle("active");
   advancedContent.classList.toggle("active");
+});
+
+butlerSettingsToggle.addEventListener("click", () => {
+  butlerSettingsToggle.classList.toggle("active");
+  butlerSettingsContent.classList.toggle("active");
 });
 
 // Save all settings
@@ -72,6 +138,8 @@ saveBtn.addEventListener("click", async () => {
     model: modelSelect.value,
     systemPrompt: systemPromptInput.value.trim() || DEFAULT_SYSTEM_PROMPT,
     userPrompt: userPromptInput.value.trim() || DEFAULT_USER_PROMPT,
+    maxActions: parseInt(maxActionsInput.value),
+    maxComments: parseInt(maxCommentsInput.value),
   };
 
   try {

@@ -2,6 +2,20 @@
 
 let lastFocusedInput = null;
 let extensionValid = true;
+let commentId = 0;
+let butlerInterval;
+let actionsCount = 0;
+let commentsCount = 0;
+let maxActions = 40;
+let maxComments = 10;
+
+function getCommentId() {
+  return commentId++;
+}
+
+function setLastFocusedInput(element) {
+  lastFocusedInput = element;
+}
 
 // Check if extension context is valid
 function isExtensionValid() {
@@ -114,7 +128,7 @@ async function sendMessageSafely(message) {
 
 // Track focused comment input
 document.addEventListener(
-  "focusin",
+  "click",
   (e) => {
     // Instagram comment inputs can be textarea or contenteditable divs
     if (
@@ -159,6 +173,14 @@ document.addEventListener(
         return;
       }
 
+      if (!lastFocusedInput) {
+        showNotification(
+          "Please click on a comment input field first.",
+          "error",
+        );
+        return;
+      }
+
       // Expand caption by clicking "... more" link if it exists
       expandCaption();
 
@@ -167,7 +189,9 @@ document.addEventListener(
 
       // Wait for caption expansion, then trigger comment generation
       setTimeout(() => {
-        sendMessageSafely({ action: "triggerGeneration" });
+        const id = getCommentId();
+        lastFocusedInput.dataset.commentId = id;
+        sendMessageSafely({ action: "triggerGeneration", commentId: id });
       }, 400);
     }
   },
@@ -190,9 +214,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   }
 
   if (request.action === "insertComment") {
-    insertGeneratedComment(request.comment);
+    insertGeneratedComment(request.comment, request.commentId);
     showNotification("Comment generated successfully!", "success");
-    sendResponse({ success: true });
     return true;
   }
 
@@ -200,6 +223,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     showNotification(request.message || "Error generating comment", "error");
     sendResponse({ success: true });
     return true;
+  }
+
+  if (request.action === "startButler") {
+    startButler();
+  } else if (request.action === "stopButler") {
+    stopButler();
   }
 });
 
@@ -311,7 +340,7 @@ async function extractPostContext() {
           !text.includes("Sign up")
         ) {
           // Skip if it's just emoji or numbers
-          if (!/^[\d\s.,!?]+$/.test(text)) {
+          if (!/^[ -]*$/.test(text)) {
             captionText = text;
             console.log(
               "[IG Comment AI] Found caption using selector:",
@@ -437,37 +466,58 @@ async function imageToBase64(img) {
   });
 }
 
-function insertGeneratedComment(comment) {
-  if (!lastFocusedInput) {
+function insertGeneratedComment(comment, commentId) {
+  const commentInput = document.querySelector(
+    `[data-comment-id='${commentId}']`,
+  );
+  if (!commentInput) {
     console.error("[IG Comment AI] No comment input to insert into");
     return;
   }
 
   // Handle both textarea and contenteditable elements
-  if (lastFocusedInput.tagName === "TEXTAREA") {
-    lastFocusedInput.value = comment;
-    lastFocusedInput.dispatchEvent(new Event("input", { bubbles: true }));
-    lastFocusedInput.dispatchEvent(new Event("change", { bubbles: true }));
-  } else if (lastFocusedInput.isContentEditable) {
-    lastFocusedInput.innerText = comment;
-    lastFocusedInput.dispatchEvent(new Event("input", { bubbles: true }));
-    lastFocusedInput.dispatchEvent(new Event("change", { bubbles: true }));
+  if (commentInput.tagName === "TEXTAREA") {
+    commentInput.value = comment;
+    commentInput.dispatchEvent(new Event("input", { bubbles: true }));
+    commentInput.dispatchEvent(new Event("change", { bubbles: true }));
+  } else if (commentInput.isContentEditable) {
+    commentInput.innerText = comment;
+    commentInput.dispatchEvent(new Event("input", { bubbles: true }));
+    commentInput.dispatchEvent(new Event("change", { bubbles: true }));
   }
 
   // Focus the input again
-  lastFocusedInput.focus();
+  commentInput.focus();
 
   // Move cursor to end
-  if (lastFocusedInput.isContentEditable) {
+  if (commentInput.isContentEditable) {
     const range = document.createRange();
     const sel = window.getSelection();
-    range.selectNodeContents(lastFocusedInput);
+    range.selectNodeContents(commentInput);
     range.collapse(false);
     sel.removeAllRanges();
     sel.addRange(range);
   } else {
-    lastFocusedInput.setSelectionRange(comment.length, comment.length);
+    commentInput.setSelectionRange(comment.length, comment.length);
   }
+
+  // Click the post button
+  setTimeout(() => {
+    const postButton = Array.from(
+      document.querySelectorAll('div[role="button"]'),
+    ).find((btn) => btn.textContent === "Post");
+    if (postButton) {
+      postButton.click();
+      console.log("[IG Butler] Commented on a post");
+      commentsCount++;
+      actionsCount++;
+      chrome.storage.local.get(["butlerStats"], (res) => {
+        const stats = res.butlerStats || { likes: 0, follows: 0, comments: 0 };
+        stats.comments = commentsCount;
+        chrome.storage.local.set({ butlerStats: stats });
+      });
+    }
+  }, 500);
 }
 
 // Notification system
@@ -530,11 +580,100 @@ function showNotification(message, type = "info") {
 
   document.body.appendChild(notification);
 
-  // Auto-remove after 3 seconds
+  // Auto-remove after 1 second
   setTimeout(() => {
     notification.style.opacity = "0";
-    setTimeout(() => notification.remove(), 300);
-  }, 3000);
+    setTimeout(() => notification.remove(), 100);
+  }, 1000);
 }
+
+// Butler mode content script
+function startButler() {
+  chrome.storage.local.get(["maxActions", "maxComments"], (result) => {
+    maxActions = result.maxActions || 40;
+    maxComments = result.maxComments || 10;
+    actionsCount = 0;
+    commentsCount = 0;
+    console.log("[IG Butler] Starting butler mode");
+    butlerInterval = setInterval(doButlerStuff, 5000); // Run every 5 seconds
+  });
+}
+
+function stopButler() {
+  console.log("[IG Butler] Stopping butler mode");
+  clearInterval(butlerInterval);
+  chrome.storage.local.set({ butlerMode: false });
+}
+
+function doButlerStuff() {
+  if (actionsCount >= maxActions) {
+    stopButler();
+    return;
+  }
+
+  // Scroll the page
+  window.scrollBy(0, window.innerHeight);
+
+  // Find posts
+  const articles = document.querySelectorAll("article");
+  articles.forEach((article) => {
+    if (actionsCount >= maxActions) {
+      stopButler();
+      return;
+    }
+
+    // 1. Like post
+    const likeButton = article.querySelector('svg[aria-label="Like"]');
+    if (likeButton) {
+      likeButton.parentElement.click();
+      console.log("[IG Butler] Liked a post");
+      actionsCount++;
+      chrome.storage.local.get(["butlerStats"], (res) => {
+        const stats = res.butlerStats || { likes: 0, follows: 0, comments: 0 };
+        stats.likes++;
+        chrome.storage.local.set({ butlerStats: stats });
+      });
+    }
+
+    // 2. Follow user
+    const followButton = Array.from(
+      article.querySelectorAll('div[role="button"]'),
+    ).find((btn) => btn.textContent === "Follow");
+    if (followButton) {
+      followButton.click();
+      console.log("[IG Butler] Followed a user");
+      actionsCount++;
+      chrome.storage.local.get(["butlerStats"], (res) => {
+        const stats = res.butlerStats || { likes: 0, follows: 0, comments: 0 };
+        stats.follows++;
+        chrome.storage.local.set({ butlerStats: stats });
+      });
+    }
+
+    // 3. Comment on post
+    if (commentsCount < maxComments) {
+      const commentInput = article.querySelector(
+        'textarea[placeholder*="comment"]',
+      );
+      if (
+        commentInput &&
+        !commentInput.value &&
+        !commentInput.dataset.commentId
+      ) {
+        const id = getCommentId();
+        commentInput.dataset.commentId = id;
+        setLastFocusedInput(commentInput);
+        sendMessageSafely({ action: "triggerGeneration", commentId: id });
+      }
+    }
+  });
+}
+
+// Check initial state of butler mode
+chrome.storage.local.get(["butlerMode"], (result) => {
+  if (result.butlerMode) {
+    startButler();
+  }
+});
 
 console.log("[IG Comment AI] Extension loaded successfully");
