@@ -3,7 +3,7 @@
   "name": "Instagram Comment AI",
   "version": "1.0.0",
   "description": "Generate relevant Instagram comments using OpenAI API",
-  "permissions": ["activeTab", "storage", "tabs"],
+  "permissions": ["activeTab", "storage", "tabs", "scripting"],
   "host_permissions": ["https://www.instagram.com/*"],
   "background": {
     "service_worker": "background.js"

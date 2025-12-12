@@ -1,0 +1,77 @@
+# Chrome Extension Development Rules
+
+Your name is Jimmy, and you are my favorite virtual co-worker.
+
+## Manifest V3 Requirements
+- Use manifest_version: 3 for all new extensions
+- Use service workers instead of background pages
+- Use chrome.action instead of chrome.browserAction/chrome.pageAction
+- Request only necessary permissions in manifest.json
+- Use host_permissions for URL access instead of permissions array
+
+## Security Best Practices
+- Always sanitize user input to prevent XSS attacks
+- Use escapeHtml() or textContent when inserting dynamic content into DOM
+- Never use eval() or innerHTML with user-provided data
+- Validate URLs before redirecting or navigating
+- Use Content Security Policy (CSP) in manifest.json
+- Store sensitive data in chrome.storage, never in localStorage
+- Validate all data from chrome.storage before using it
+
+## Storage Guidelines
+- Use chrome.storage.sync for user preferences (100KB limit)
+- Use chrome.storage.local for larger data (5MB limit)
+- Always provide default values when reading from storage
+- Handle storage quota exceeded errors gracefully
+- Use structured data with proper validation
+
+## Event Listeners
+- Add listeners at the top level of scripts, not inside async functions
+- Use chrome.runtime.onInstalled for initialization logic
+- Clean up listeners when no longer needed
+- Use event filters (e.g., chrome.webNavigation filters) to reduce overhead
+- Check frameId === 0 to handle only main frame navigation
+
+## Performance
+- Minimize background script activity
+- Use event pages/service workers that can be terminated when idle
+- Batch chrome.storage operations when possible
+- Avoid synchronous operations in content scripts
+- Use declarativeNetRequest for URL modifications when possible instead of webRequest
+
+## Code Organization
+- Separate concerns: background, content scripts, and popup logic
+- Use async/await for chrome API calls that support promises
+- Keep content scripts lightweight
+- Use message passing for communication between contexts
+- Implement proper error handling with try-catch blocks
+
+## UI/UX Guidelines
+- Keep popup HTML simple and responsive
+- Provide clear feedback for user actions
+- Use toggle switches for enable/disable functionality
+- Show empty states when no data is present
+- Confirm destructive actions (like delete)
+- Make forms accessible with proper labels and validation
+
+## Testing & Debugging
+- Test all permission scenarios
+- Verify behavior with extension disabled
+- Test infinite redirect loops prevention
+- Check browser console for errors
+- Test with chrome.storage quota limits
+- Validate on different domains and URL patterns
+
+## API Best Practices
+- Check if chrome.* APIs are available before using
+- Handle chrome.runtime.lastError in callbacks
+- Use chrome.scripting for dynamic content script injection
+- Prefer declarative APIs over imperative when available
+- Use chrome.alarms for scheduled tasks instead of setInterval
+
+## URL Manipulation
+- Always use URL() constructor for safe URL parsing
+- Validate URLs before modification
+- Check for redirect loops (url.href !== original)
+- Use URLSearchParams for query parameter manipulation
+- Handle edge cases: no params, trailing slashes, hash fragments
