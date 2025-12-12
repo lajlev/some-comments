@@ -5,6 +5,40 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Instagram Comment AI</title>
         <style>
+            :root {
+                --primary-color: #e4405f;
+                --primary-hover: #c9365a;
+                --bg-primary: #ffffff;
+                --bg-secondary: #f0f2f5;
+                --text-primary: #262626;
+                --text-secondary: #65676b;
+                --border-color: #dbdbdb;
+                --input-bg: #ffffff;
+                --shortcut-bg: #ffffff;
+                --success-bg: #d4edda;
+                --success-text: #155724;
+                --error-bg: #f8d7da;
+                --error-text: #721c24;
+            }
+
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    --primary-color: #e4405f;
+                    --primary-hover: #ff5277;
+                    --bg-primary: #1a1a1a;
+                    --bg-secondary: #2a2a2a;
+                    --text-primary: #f5f5f5;
+                    --text-secondary: #b0b0b0;
+                    --border-color: #404040;
+                    --input-bg: #2a2a2a;
+                    --shortcut-bg: #2a2a2a;
+                    --success-bg: #1e4620;
+                    --success-text: #8fd68f;
+                    --error-bg: #4a1f1f;
+                    --error-text: #f5b5b5;
+                }
+            }
+
             body {
                 width: 350px;
                 padding: 20px;
@@ -12,12 +46,19 @@
                     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
                     Oxygen, Ubuntu, Cantarell, sans-serif;
                 margin: 0;
+                background: var(--bg-primary);
+                color: var(--text-primary);
             }
 
             h1 {
                 font-size: 18px;
                 margin: 0 0 15px 0;
-                color: #262626;
+                color: var(--text-primary);
+            }
+
+            h2 {
+                font-size: 16px;
+                color: var(--text-primary);
             }
 
             .section {
@@ -29,7 +70,7 @@
                 margin-bottom: 5px;
                 font-size: 14px;
                 font-weight: 500;
-                color: #262626;
+                color: var(--text-primary);
             }
 
             input[type="password"],
@@ -39,11 +80,13 @@
             textarea {
                 width: 100%;
                 padding: 10px;
-                border: 1px solid #dbdbdb;
+                border: 1px solid var(--border-color);
                 border-radius: 6px;
                 font-size: 14px;
                 box-sizing: border-box;
                 font-family: inherit;
+                background: var(--input-bg);
+                color: var(--text-primary);
             }
 
             input[type="password"]:focus,
@@ -52,7 +95,7 @@
             select:focus,
             textarea:focus {
                 outline: none;
-                border-color: #0095f6;
+                border-color: var(--primary-color);
             }
 
             textarea {
@@ -67,6 +110,7 @@
                 align-items: center;
                 justify-content: space-between;
                 padding: 10px 0;
+                color: var(--text-primary);
             }
 
             .collapsible:hover {
@@ -96,7 +140,7 @@
             button {
                 width: 100%;
                 padding: 10px;
-                background: #0095f6;
+                background: var(--primary-color);
                 color: white;
                 border: none;
                 border-radius: 6px;
@@ -107,7 +151,7 @@
             }
 
             button:hover {
-                background: #0081d8;
+                background: var(--primary-hover);
             }
 
             button:active {
@@ -123,35 +167,35 @@
             }
 
             .status.success {
-                background: #d4edda;
-                color: #155724;
+                background: var(--success-bg);
+                color: var(--success-text);
                 display: block;
             }
 
             .status.error {
-                background: #f8d7da;
-                color: #721c24;
+                background: var(--error-bg);
+                color: var(--error-text);
                 display: block;
             }
 
             .info {
-                background: #f0f2f5;
+                background: var(--bg-secondary);
                 padding: 12px;
                 border-radius: 6px;
                 font-size: 13px;
-                color: #65676b;
+                color: var(--text-secondary);
                 line-height: 1.5;
             }
 
             .info strong {
-                color: #262626;
+                color: var(--text-primary);
             }
 
             .shortcut {
                 display: inline-block;
-                background: white;
+                background: var(--shortcut-bg);
                 padding: 2px 6px;
-                border: 1px solid #dbdbdb;
+                border: 1px solid var(--border-color);
                 border-radius: 4px;
                 font-family: monospace;
                 font-size: 12px;
@@ -159,12 +203,16 @@
             }
 
             a {
-                color: #0095f6;
+                color: var(--primary-color);
                 text-decoration: none;
             }
 
             a:hover {
                 text-decoration: underline;
+            }
+
+            p {
+                color: var(--text-primary);
             }
         </style>
     </head>

@@ -1,0 +1,42 @@
+{
+  "toolPermissions": {
+    "mcp__acp__Read": {
+      "type": "allowed"
+    },
+    "mcp__acp__Write": {
+      "type": "allowed"
+    },
+    "mcp__acp__Edit": {
+      "type": "allowed"
+    },
+    "mcp__acp__Bash": {
+      "type": "allowed"
+    },
+    "mcp__acp__BashOutput": {
+      "type": "allowed"
+    },
+    "mcp__acp__KillShell": {
+      "type": "allowed"
+    },
+    "Glob": {
+      "type": "allowed"
+    },
+    "Grep": {
+      "type": "allowed"
+    },
+    "Task": {
+      "type": "allowed"
+    },
+    "WebFetch": {
+      "type": "allowed"
+    },
+    "WebSearch": {
+      "type": "allowed"
+    }
+  },
+  "bashCommandPermissions": {
+    "npm run lint": {
+      "type": "allowed"
+    }
+  }
+}
